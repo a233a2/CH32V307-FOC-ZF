@@ -1,100 +1,135 @@
 #include "zf_common_headfile.h"
-#include "FOC.h"
 #include "math.h"
-
-//初始变量及函数定义
-#define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-//宏定义实现的一个约束函数,用于限制一个值的范围。
-//具体来说，该宏定义的名称为 _constrain，接受三个参数 amt、low 和 high，分别表示要限制的值、最小值和最大值。该宏定义的实现使用了三元运算符，根据 amt 是否小于 low 或大于 high，返回其中的最大或最小值，或者返回原值。
-//换句话说，如果 amt 小于 low，则返回 low；如果 amt 大于 high，则返回 high；否则返回 amt。这样，_constrain(amt, low, high) 就会将 amt 约束在 [low, high] 的范围内。
-
-float voltage_power_supply=12.6;
-float shaft_angle=0,open_loop_timestamp=0;
-float zero_electric_angle=0,Ualpha,Ubeta=0,Ua=0,Ub=0,Uc=0,dc_a=0,dc_b=0,dc_c=0;
+#include <stdlib.h>
 
 
 
-// 电角度求解
-float _electricalAngle(float shaft_angle, int pole_pairs)
+float Ua=0,Ub=0,Uc=0,Ualpha,Ubeta=0,dc_a=0,dc_b=0,dc_c=0;
+float voltage_limit = 7;
+float voltage_power_supply = 0;
+float zero_electric_Angle=0.0;
+
+int pp = 7,Dir = 1;
+
+//脧脼脰脝路霉脰碌
+float constrain(float amt, float low, float high)
 {
-  return (shaft_angle * pole_pairs);
+     return ((amt<low)?(low):((amt)>(high)?(high):(amt)));
 }
 
-// 归一化角度到 [0,2PI]
-float _normalizeAngle(float angle)
+//陆芦陆脟露脠鹿茅禄炉碌陆0-2PI
+float normalizeAngle(float angle)
 {
-  float a = fmod(angle, 2*PI);   //取余运算可以用于归一化，列出特殊值例子算便知
-  return a >= 0 ? a : (a + 2*PI);
-  //三目运算符。格式：condition ? expr1 : expr2
-  //其中，condition 是要求值的条件表达式，如果条件成立，则返回 expr1 的值，否则返回 expr2 的值。可以将三目运算符视为 if-else 语句的简化形式。
-  //fmod 函数的余数的符号与除数相同。因此，当 angle 的值为负数时，余数的符号将与 _2PI 的符号相反。也就是说，如果 angle 的值小于 0 且 _2PI 的值为正数，则 fmod(angle, _2PI) 的余数将为负数。
-  //例如，当 angle 的值为 -PI/2，_2PI 的值为 2PI 时，fmod(angle, _2PI) 将返回一个负数。在这种情况下，可以通过将负数的余数加上 _2PI 来将角度归一化到 [0, 2PI] 的范围内，以确保角度的值始终为正数。
+    float a = fmod(angle, 2*PI);
+    return ((a>=0) ? a : (a + 2*PI));
 }
 
-
-//开环速度函数
-float velocityOpenloop(float target_velocity){
-  unsigned long now_us = timer_get(TIM_2);  //获取从开启芯片以来的微秒数，它的精度是 4 微秒。 micros() 返回的是一个无符号长整型（unsigned long）的值
-
-  //计算当前每个Loop的运行时间间隔
-  float Ts = (now_us - open_loop_timestamp) * 1e-6f;
-
-  //由于 micros() 函数返回的时间戳会在大约 70 分钟之后重新开始计数，在由70分钟跳变到0时，TS会出现异常，因此需要进行修正。如果时间间隔小于等于零或大于 0.5 秒，则将其设置为一个较小的默认值，即 1e-3f
-  if(Ts <= 0 || Ts > 0.5f) Ts = 1e-3f;
-
-
-  // 通过乘以时间间隔和目标速度来计算需要转动的机械角度，存储在 shaft_angle 变量中。在此之前，还需要对轴角度进行归一化，以确保其值在 0 到 2π 之间。
-  shaft_angle = _normalizeAngle(shaft_angle + target_velocity*Ts);
-  //以目标速度为 10 rad/s 为例，如果时间间隔是 1 秒，则在每个循环中需要增加 10 * 1 = 10 弧度的角度变化量，才能使电机转动到目标速度。
-  //如果时间间隔是 0.1 秒，那么在每个循环中需要增加的角度变化量就是 10 * 0.1 = 1 弧度，才能实现相同的目标速度。因此，电机轴的转动角度取决于目标速度和时间间隔的乘积。
-
-  // 使用早前设置的voltage_power_supply的1/3作为Uq值，这个值会直接影响输出力矩
-  // 最大只能设置为Uq = voltage_power_supply/2，否则ua,ub,uc会超出供电电压限幅
-  float Uq = voltage_power_supply/3;
-
-  setPhaseVoltage(Uq,  0, _electricalAngle(shaft_angle, 7));
-
-  open_loop_timestamp = now_us;  //用于计算下一个时间间隔
-
-  return Uq;
-}
-
-
-
-
-// 设置PWM到控制器输出
-void setPwm(float Ua, float Ub, float Uc)
+float electricAngle(void)
 {
-  // 计算占空比
-  // 限制占空比从0到1
-  dc_a = _constrain(Ua / voltage_power_supply, 0.0f , 1.0f );
-  dc_b = _constrain(Ub / voltage_power_supply, 0.0f , 1.0f );
-  dc_c = _constrain(Uc / voltage_power_supply, 0.0f , 1.0f );
-  pwm_set_duty(LA_PWM, dc_a*10000);
-  pwm_set_duty(LA_PWM, dc_b*10000);
-  pwm_set_duty(LA_PWM, dc_c*10000);
-  //Duty_Set(dc_a,dc_b,dc_c);
+    return normalizeAngle((GetAngle_NoTrack() * pp * Dir) - zero_electric_Angle);
 }
 
-
-
-void setPhaseVoltage(float Uq,float Ud, float angle_el)
+void SetPwm(float Ua, float Ub, float Uc)
 {
-  angle_el = _normalizeAngle(angle_el + zero_electric_angle);
-  // 帕克逆变换
-  Ualpha =  -Uq*sin(angle_el);
-  Ubeta =   Uq*cos(angle_el);
+    float U_a=0.0;
+    float U_b=0.0;
+    float U_c=0.0;
 
-  // 克拉克逆变换
-  Ua = Ualpha + voltage_power_supply/2;
-  Ub = (sqrt(3)*Ubeta-Ualpha)/2 + voltage_power_supply/2;
-  Uc = (-Ualpha-sqrt(3)*Ubeta)/2 + voltage_power_supply/2;
+    U_a = constrain(Ua, 0.0f, voltage_limit);
+    U_b = constrain(Ub, 0.0f, voltage_limit);
+    U_c = constrain(Uc, 0.0f, voltage_limit);
 
-  setPwm(Ua,Ub,Uc);
+    dc_a = constrain(U_a / voltage_power_supply, 0.0f, 1.0f);
+    dc_b = constrain(U_b / voltage_power_supply, 0.0f, 1.0f);
+    dc_c = constrain(U_c / voltage_power_supply, 0.0f, 1.0f);
+
+    pwm_set_duty(LA_PWM, dc_a);
+    pwm_set_duty(LA_PWM, dc_b);
+    pwm_set_duty(LA_PWM, dc_c);
+
+}
+
+//FOC潞脣脨脛脣茫路篓拢卢驴脣脌颅驴脣脛忙卤盲禄禄/脜脕驴脣脛忙卤盲禄禄
+void SetPhaseVoltage(float Uq, float Ud, float angle_el)
+{
+//  angle_el = normalizeAngle(angle_el);
+
+    Ualpha = -Uq*sin(angle_el);
+    Ubeta = Uq*cos(angle_el);
+
+    Ua = Ualpha + voltage_power_supply / 2;
+    Ub = (sqrt(3)*Ubeta - Ualpha) / 2 + voltage_power_supply / 2;
+    Uc = -(Ualpha + sqrt(3)*Ubeta) / 2 + voltage_power_supply / 2;
+
+    SetPwm(Ua,Ub,Uc);
 }
 
 
+void Check_Sensor(void)
+{
+    SetPhaseVoltage(3, 0, _3PI_2);
+    delay_ms(3000);
+    zero_electric_Angle = electricAngle();
+    SetPhaseVoltage(0, 0, _3PI_2);
+    delay_ms(500);
+}
 
+void FOC_Init(void)
+{
+    voltage_power_supply = VOLTAGE_IN;
+    DRV8301_Init();
+    CurrSense_Init();
+    AS5600_Init();
+
+    Check_Sensor();
+}
+
+// 麓庐驴脷陆脫脢脮
+float Last_C_Num = 0.0;
+float GetCommand(void)
+{
+    float C_Num = 0.0;
+    char *Getchar;
+    uint8 Serial_RxPacket;
+    if(uart_query_byte(UART_3,&Serial_RxPacket) == 1)
+    {
+        C_Num = strtof(Serial_RxPacket, &Getchar);
+        Last_C_Num = C_Num;
+
+        return C_Num;
+    }
+    return Last_C_Num;
+}
+
+float shaft_angle;
+float openloop_timestamp;
+float velocityopenloop(float target)
+{
+    float Uq = 0.0;
+    float Ts = 0.0;
+
+    uint32_t now_ts  =  timer_get(TIM_2);
+
+    if(now_ts < openloop_timestamp)
+      Ts = (openloop_timestamp - now_ts)/9.0f*1e-6f;
+    else
+        Ts = (0xFFFFFF - now_ts + openloop_timestamp)/9.0f*1e-6f;
+
+    if(Ts < 0||Ts >= 0.005)  Ts = 0.001f;
+
+    shaft_angle = normalizeAngle(shaft_angle + pp*target*Ts);
+
+//  Serial_SendFloatNumber(Ts, 1, 6);
+//  Serial_SendString("\n");
+
+    Uq = voltage_limit;
+
+    SetPhaseVoltage(Uq, 0, shaft_angle);
+
+    openloop_timestamp = now_ts;
+
+    return Uq;
+}
 
 
 

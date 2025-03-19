@@ -1,7 +1,10 @@
 eclipse.preferences.version=1
 encoding//code/AS5600.c=UTF-8
 encoding//code/AS5600.h=UTF-8
+encoding//code/FOC.c=UTF-8
+encoding//code/pid_control.c=UTF-8
 encoding//code/vofa.c=UTF-8
+encoding//user_c/main.c=UTF-8
 encoding//zf_device/zf_device_dl1a.c=UTF-8
 encoding//zf_device/zf_device_dl1a.h=UTF-8
 encoding//zf_device/zf_device_ips114.c=UTF-8

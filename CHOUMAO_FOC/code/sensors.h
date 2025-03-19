@@ -9,6 +9,25 @@ extern uint16 Voltage_B;
 extern uint16 Voltage_C;
 
 
+
+
+
+struct CurrentDetect{
+    float I_a;
+    float I_b;
+    float U_a;
+    float U_b;
+};
+//extern struct CurrentDetect Current;
+
+void DriftOffsets(void);
+void CurrSense_Init(void);
+struct CurrentDetect GetPhaseCurrent(void);
+
+
+
+
+
 void Current_sensor_init(void);
 void Voltage_sensor_init(void);
 void Get_Current(void);

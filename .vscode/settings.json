@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ch32v30x_gpio.h": "c",
+        "as5600.h": "c"
+    }
+}

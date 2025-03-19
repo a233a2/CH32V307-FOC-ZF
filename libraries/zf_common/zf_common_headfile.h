@@ -39,6 +39,7 @@
 
 
 
+#include <pid_control.h>
 #include "stdio.h"
 #include "stdint.h"
 #include "string.h"
@@ -147,9 +148,10 @@
 #include "sensors.h"
 #include "AS5600.h"
 #include "vofa.h"
-#include "ppid.h"
 #include "Motor.h"
 #include "fliter.h"
+#include "pid_control.h"
+
 //===================================================用户自定义文件===================================================
 
 #endif

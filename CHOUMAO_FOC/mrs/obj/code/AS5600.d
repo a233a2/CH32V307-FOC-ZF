@@ -6,6 +6,7 @@ code/AS5600.o: \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Core/core_riscv.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_rcc.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\zf_common/zf_common_headfile.h \
+ D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/pid_control.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_adc.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_bkp.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_can.h \
@@ -88,7 +89,6 @@ code/AS5600.o: \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/sensors.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/AS5600.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/vofa.h \
- D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/ppid.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/Motor.h \
  D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/fliter.h
 
@@ -103,6 +103,8 @@ D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Core/core_riscv.
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_rcc.h:
 
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\zf_common/zf_common_headfile.h:
+
+D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/pid_control.h:
 
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\libraries\sdk\Peripheral/ch32v30x_adc.h:
 
@@ -267,8 +269,6 @@ D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/sensors.h:
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/AS5600.h:
 
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/vofa.h:
-
-D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/ppid.h:
 
 D:\DESKTOP\CH32-FOC\CHV307_Library-master\Example\CHOUMAO_FOC\code/Motor.h:
 

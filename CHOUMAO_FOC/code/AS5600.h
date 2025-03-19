@@ -19,7 +19,15 @@ extern "C" {
 /**
  * @brief  软件 I2C 引脚初始化（PD1 -> SCL, PD0 -> SDA）。
  */
-void SoftI2C_Init(void);
+void AS5600_Init(void);
+
+
+
+float GetAngle(void);
+float GetAngle_NoTrack(void);
+float GetVelocity(void);
+
+
 
 /**
  * @brief  读取 AS5600 的角度（0~4095），单位为 12 位。

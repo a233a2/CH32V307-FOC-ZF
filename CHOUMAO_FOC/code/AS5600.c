@@ -23,6 +23,12 @@
 /* 用于“读 SDA 引脚” */
 #define SDA_READ()  GPIO_ReadInputDataBit(SDA_PORT, SDA_PIN)
 
+
+#define PI       3.14159265359f
+#define _2PI       6.28318530718f
+
+
+
 /* 置 SCL/SDA 高或低 */
 #define SCL_H()     GPIO_SetBits(SCL_PORT, SCL_PIN)
 #define SCL_L()     GPIO_ResetBits(SCL_PORT, SCL_PIN)
@@ -59,7 +65,7 @@ static void SDA_OUT(void)
 }
 
 /* 软件 I2C 初始化：配置 PD0、PD1 */
-void SoftI2C_Init(void)
+void AS5600_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -340,6 +346,80 @@ void AS5600_UpdateAngle(float *Distance, float *angle_360, float *Ele_rad)
     // 如果你需要完整 2π，请自行修改
     *Ele_rad = (*angle_360 / 360.0f) * MY_PI * POLE_PAIRS;
 }
+
+
+float Last_Vel_ts = 0.0;
+float Vel_Last_Angle = 0.0;
+float GetVelocity(void)
+{
+    float dt = 0.0;
+    float Vel_ts = timer_get(TIM_2);
+    if(Vel_ts < Last_Vel_ts) dt = (Last_Vel_ts - Vel_ts)/9*1e-6f;
+    else dt = (0xFFFFFF - Vel_ts + Last_Vel_ts)/9*1e-6f;
+
+    if(dt < 0.0001) dt = 10000;
+
+    float Vel_Angle = GetAngle();
+
+    float dv = Vel_Angle - Vel_Last_Angle;
+
+    float velocity = (Vel_Angle - Vel_Last_Angle)/dt;
+
+    Last_Vel_ts = Vel_ts;
+    Vel_Last_Angle = Vel_Angle;
+
+
+  return velocity;
+}
+
+
+
+float Last_ts = 0.0;
+float last_angle = 0.0;
+float GetAngle_NoTrack(void)
+{
+    float Angle = 0.0;
+    uint8_t DataH = 0;
+    uint8_t DataL = 0;
+    DataH = SoftI2C_ReadOneByte(AS5600_I2C_ADDR, AS5600_REG_ANGLE_H);
+    DataL = SoftI2C_ReadOneByte(AS5600_I2C_ADDR, AS5600_REG_ANGLE_L);
+
+    Angle = (DataH << 8) | DataL;
+
+    Angle = (Angle/4096) * _2PI;
+//  Angle = (Angle/4096) * 360;
+
+    return Angle;
+}
+
+
+
+
+float full_rotations = 0.0;
+float Last_Angle = 0.0;
+float GetAngle(void)
+{
+    float D_Angle = 0.0;
+    float Angle = GetAngle_NoTrack();
+    D_Angle = Angle - Last_Angle;
+
+    if( fabs(D_Angle) > (0.8f*2*PI) )
+    {
+        full_rotations = full_rotations + ((D_Angle > 0) ? -1 :1);
+    }
+
+    Last_Angle = Angle;
+
+    return (full_rotations * 2 * PI + Last_Angle);
+}
+
+
+
+
+
+
+
+
 
 
 
